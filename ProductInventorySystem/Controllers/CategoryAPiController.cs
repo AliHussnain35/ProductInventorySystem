@@ -54,4 +54,46 @@ public class CategoryApiController : ControllerBase
         await _categoryRepository.DeleteAsync(id);
         return NoContent();
     }
+    [HttpPost("paged")]
+public async Task<IActionResult> GetPaged()
+{
+    // DataTables Parameters
+    var draw = HttpContext.Request.Form["draw"].FirstOrDefault();
+    var start = Convert.ToInt32(HttpContext.Request.Form["start"].FirstOrDefault() ?? "0");
+    var length = Convert.ToInt32(HttpContext.Request.Form["length"].FirstOrDefault() ?? "10");
+    var searchValue = HttpContext.Request.Form["search[value]"].FirstOrDefault();
+
+    // Get All Categories
+    var query = await _categoryRepository.GetAllAsync();
+
+    // Filtering
+    if (!string.IsNullOrWhiteSpace(searchValue))
+{
+    query = query
+        .Where(c => c.CategoryName?.ToLower().Contains(searchValue.ToLower()) == true)
+        .ToList();
+}
+
+var recordsTotal = query.Count(); // ✅ FIXED
+
+
+    // Paging
+    var data = query
+        .Skip(start)
+        .Take(length)
+        .Select(c => new {
+            c.CategoryId,
+            c.CategoryName
+        })
+        .ToList();
+
+    // Return JSON Result in DataTables Format
+    return Ok(new {
+        draw = draw,
+        recordsTotal = recordsTotal,
+        recordsFiltered = recordsTotal,
+        data = data
+    });
+}
+
 }

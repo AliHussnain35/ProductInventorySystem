@@ -37,7 +37,25 @@ namespace ProductInventorySystem.MVCControllers
             return View();
         }
 
-
+        [HttpGet]
+        public async Task<IActionResult> CreatePartial()
+        {
+            var categories = await _categoryRepository.GetAllAsync();
+            ViewBag.CategoryId = new SelectList(categories, "CategoryId", "CategoryName");
+            return PartialView("_CreatePartial", new Product());
+        }
+        [HttpPost]
+        public async Task<IActionResult> CreatePartial(Product product)
+        {
+            if (ModelState.IsValid)
+            {
+                await _productRepository.AddAsync(product);
+                return Json(new { success = true });
+            }
+            var categories = await _categoryRepository.GetAllAsync();
+            ViewBag.CategoryId = new SelectList(categories, "CategoryId", "CategoryName");
+            return PartialView("_CreatePartial", product);
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product)
@@ -64,7 +82,29 @@ namespace ProductInventorySystem.MVCControllers
 
             return View(product);
         }
+        [HttpGet]
+        public async Task<IActionResult> EditPartial(int id)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
+                return NotFound();
+            var categories = await _categoryRepository.GetAllAsync();
+            ViewBag.CategoryId = new SelectList(categories, "CategoryId", "CategoryName", product.CategoryId);
+            return PartialView("_EditPartial", product);
+        }
 
+        [HttpPost]
+        public async Task<IActionResult> EditPartial(Product product)
+        {
+            if (ModelState.IsValid)
+            {
+                await _productRepository.UpdateAsync(product);
+                return Json(new { success = true });
+            }
+            var categories = await _categoryRepository.GetAllAsync();
+            ViewBag.CategoryId = new SelectList(categories, "CategoryId", "CategoryName", product.CategoryId);
+            return PartialView("_EditPartial", product);
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Product product)
@@ -95,6 +135,22 @@ namespace ProductInventorySystem.MVCControllers
         {
             await _productRepository.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DetailsPartial(int id)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
+                return NotFound();
+            return PartialView("_DetailsPartial", product);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTablePartial()
+        {
+            var products = await _productRepository.GetAllAsync();
+            return PartialView("_ProductTablePartial", products);
         }
     }
 }

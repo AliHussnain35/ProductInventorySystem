@@ -1,0 +1,34 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model IEnumerable<ProductInventorySystem.Models.Product>
+
+<table class="table table-hover align-middle mb-0 bg-white rounded-3 overflow-hidden">
+    <thead class="table-light border-bottom">
+        <tr>
+            <th class="fw-semibold text-muted">Name</th>
+            <th class="fw-semibold text-muted">Price</th>
+            <th class="fw-semibold text-muted">Category</th>
+            <th class="fw-semibold text-muted">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr class="border-bottom border-light">
+                <td class="fw-medium">@product.ProductName</td>
+                <td class="text-success fw-bold">@product.Price.ToString("C")</td>
+                <td>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 rounded-pill">
+                        @product.Category?.CategoryName
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-outline-primary btn-sm btn-edit-product" data-id="@product.ProductId">Edit</button>
+                    <button class="btn btn-outline-info btn-sm btn-product-details" data-id="@product.ProductId">Details</button>
+                    <button class="btn btn-outline-danger btn-sm btn-delete-product" data-id="@product.ProductId" data-name="@product.ProductName">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

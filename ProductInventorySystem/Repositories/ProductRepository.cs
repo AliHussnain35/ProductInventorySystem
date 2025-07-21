@@ -45,4 +45,21 @@ public class ProductRepository : IProductRepository
             await _context.SaveChangesAsync();
         }
     }
+    //public async Task<List<Product>> GetAllWithCategoryAsync()
+    //{
+    //    return await _context.Products.Include(p => p.Category).ToListAsync();
+    //}
+    public async Task<IEnumerable<object>> GetAllWithCategoryAsync()
+    {
+        return await _context.Products
+            .Include(p => p.Category)
+            .Select(p => new
+            {
+                p.ProductId,
+                p.ProductName,
+                p.Price,
+                CategoryName = p.Category.CategoryName
+            })
+            .ToListAsync();
+    }
 }

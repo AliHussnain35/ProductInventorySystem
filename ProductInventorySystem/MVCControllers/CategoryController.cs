@@ -82,5 +82,51 @@ namespace ProductInventorySystem.MVCControllers
             await _categoryRepository.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CreatePartial()
+        {
+            return PartialView("_CreatePartial", new Category());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreatePartial(Category category)
+        {
+            if (ModelState.IsValid)
+            {
+                await _categoryRepository.AddAsync(category);
+                return Json(new { success = true });
+            }
+            return PartialView("_CreatePartial", category);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditPartial(int id)
+        {
+            var category = await _categoryRepository.GetByIdAsync(id);
+            if (category == null)
+                return NotFound();
+            return PartialView("_EditPartial", category);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditPartial(Category category)
+        {
+            if (ModelState.IsValid)
+            {
+                await _categoryRepository.UpdateAsync(category);
+                return Json(new { success = true });
+            }
+            return PartialView("_EditPartial", category);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DetailsPartial(int id)
+        {
+            var category = await _categoryRepository.GetByIdAsync(id);
+            if (category == null)
+                return NotFound();
+            return PartialView("_DetailsPartial", category);
+        }
     }
 }

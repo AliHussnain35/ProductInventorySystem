@@ -1,35 +1,166 @@
 ﻿@model IEnumerable<ProductInventorySystem.Models.Category>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Category List";
 }
 
-<h1>Index</h1>
+<div class="container-fluid py-4">
+    <h1 class="display-4 text-center mb-5 fw-bold text-secondary">Category List</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CategoryName)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.CategoryName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.CategoryId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.CategoryId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.CategoryId">Delete</a>
-            </td>
-        </tr>
+    <div class="card shadow-lg h-100 border-0 rounded-3">
+        <div class="card-header bg-gradient bg-secondary text-white d-flex justify-content-between align-items-center py-3 rounded-top">
+            <h2 class="h5 mb-0 fw-semibold">
+                <i class="bi bi-tags me-2"></i>Categories
+            </h2>
+            <span class="badge bg-light text-secondary fs-6 px-3 py-2 rounded-pill">@Model.Count() Total</span>
+        </div>
+        <div class="card-body p-4 bg-light bg-opacity-25">
+            <div class="mb-4 d-flex gap-2 flex-wrap">
+                <button class="btn btn-success btn-sm rounded-pill shadow-sm btn-add-category">
+                    <i class="bi bi-plus-circle me-1"></i> Add Category
+                </button>
+            </div>
+            <div class="table-responsive rounded-3 shadow-sm">
+                <table id="categoryTable" class="table table-hover align-middle mb-0 bg-white rounded-3 overflow-hidden">
+                    <thead class="table-light border-bottom">
+                        <tr>
+                            <th class="fw-semibold text-muted">Name</th>
+                            <th class="fw-semibold text-muted">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in Model)
+                        {
+                            <tr class="border-bottom border-light">
+                                <td class="fw-medium">@category.CategoryName</td>
+                                <td>
+                                    <button class="btn btn-outline-primary btn-sm btn-edit-category" data-id="@category.CategoryId">Edit</button>
+                                    <button class="btn btn-outline-info btn-sm btn-category-details" data-id="@category.CategoryId">Details</button>
+                                    <button class="btn btn-outline-danger btn-sm btn-delete-category" data-id="@category.CategoryId" data-name="@category.CategoryName">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
+
+<div class="modal fade" id="mainModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content text-black">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mainModalTitle">Modal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="mainModalBody">
+                <!-- Loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script>
+                $('#categoryTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/api/CategoryApi/paged',
+                type: 'POST'
+            },
+            columns: [
+                { data: 'categoryName' },
+                {
+                    data: 'categoryId',
+                    render: function (data, type, row) {
+                        return `
+                            <button class="btn btn-outline-primary btn-sm btn-edit-category" data-id="${data}">Edit</button>
+                            <button class="btn btn-outline-info btn-sm btn-category-details" data-id="${data}">Details</button>
+                            <button class="btn btn-outline-danger btn-sm btn-delete-category" data-id="${data}" data-name="${row.categoryName}">Delete</button>
+                        `;
+                    },
+                    orderable: false
+                }
+            ]
+        });
+
+        $(document).on('click', '.btn-add-category', function () {
+            loadModal('Add Category', '/Category/CreatePartial');
+        });
+        function loadModal(title, url) {
+            $.get(url, function (html) {
+                $('#mainModalTitle').text(title);
+                $('#mainModalBody').html(html);
+                new bootstrap.Modal(document.getElementById('mainModal')).show();
+            });
+        }
+        $(document).on('click', '.btn-edit-category', function () {
+            loadModal('Edit Category', '/Category/EditPartial/' + $(this).data('id'));
+        });
+        $(document).on('click', '.btn-category-details', function () {
+            loadModal('Category Details', '/Category/DetailsPartial/' + $(this).data('id'));
+        });
+        $(document).on('click', '.btn-delete-category', function () {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            confirmDelete(id, name, 'category');
+        });
+        function confirmDelete(id, name, type) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `Delete "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e3342f',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Delete'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const url = '/api/CategoryApi/' + id;
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        success: () => {
+                            Swal.fire('Deleted!', `"${name}" deleted.`, 'success')
+                                .then(() => location.reload());
+                        },
+                        error: () => {
+                            Swal.fire('Error', 'Something went wrong.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+        $(document).on('submit', 'form.ajax-form', function (e) {
+            e.preventDefault();
+            const $form = $(this);
+            $.ajax({
+                type: $form.attr('method'),
+                url: $form.attr('action'),
+                data: $form.serialize(),
+                success: function (result) {
+                    if (result.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('mainModal')).hide();
+                        location.reload();
+                    } else {
+                        $('#mainModalBody').html(result);
+                        $.validator.unobtrusive.parse('#mainModalBody');
+                    }
+                },
+                error: function () {
+                    alert('An error occurred.');
+                }
+            });
+        });
+    </script>
 }
-    </tbody>
-</table>
